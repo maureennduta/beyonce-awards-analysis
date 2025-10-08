@@ -1,6 +1,6 @@
 # PERSONAL PROJECT CELEBRATING BEYONCE KNOWLES
 
-This is a personal project created to celebrate Beyonce and her awe-inspiring careeer statistics.
+This is a personal project created to celebrate Beyonce and her awe-inspiring career statistics.
 
 ## Project Structure
 
