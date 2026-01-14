@@ -1,0 +1,14 @@
+[theme]
+base="dark"
+
+# Gold / honey accent (buttons, sliders, highlights)
+primaryColor="#D4AF37"
+
+# Deep warm black-brown background
+backgroundColor="#0F0D0A"
+
+# Soft espresso brown for cards and panels
+secondaryBackgroundColor="#2A1F14"
+
+# Warm ivory text (not stark white)
+textColor="#F5E6C8"

@@ -5,6 +5,22 @@ from collections import Counter
 import re
 import streamlit as st
 
+#  layout code
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    st.subheader("Main Visualization")
+    # your st.pyplot(fig) goes here
+
+with col2:
+    st.subheader("Context")
+    st.write(
+        """
+        This visualization explores how Beyoncé’s awards
+        align with studio releases and non-release years.
+        """
+    )
+
 # =========================
 # LOAD AND PREP DATA
 # =========================
