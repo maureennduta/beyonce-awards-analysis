@@ -5,21 +5,12 @@ from collections import Counter
 import re
 import streamlit as st
 
-#  layout code
+# =========================
+# PAGE SETUP
+# =========================
+st.set_page_config(layout="wide")
+
 col1, col2 = st.columns([3, 1])
-
-with col1:
-    st.subheader("Main Visualization")
-    # your st.pyplot(fig) goes here
-
-with col2:
-    st.subheader("Context")
-    st.write(
-        """
-        This visualization explores how Beyoncé’s awards
-        align with studio releases and non-release years.
-        """
-    )
 
 # =========================
 # LOAD AND PREP DATA
@@ -86,9 +77,11 @@ win_rate_by_theme = df.groupby('Theme').apply(
 
 theme_by_year = df_wins.groupby(['Year', 'Theme']).size().reset_index(name='Count')
 
-
+# =========================
+# VIEW SELECTOR
+# =========================
 view = st.selectbox(
-    "Choose a visualization",
+    "Explore the story from different angles",
     [
         "Theme Distribution",
         "Keyword Analysis",
@@ -99,112 +92,99 @@ view = st.selectbox(
 )
 
 # =========================
-# VISUALIZATIONS (ALL 5)
+# MAIN LAYOUT
 # =========================
-# fig, axes = plt.subplots(3, 2, figsize=(18, 18))
-# axes = axes.flatten()
+with col1:
+    if view == "Theme Distribution":
+        st.subheader("Recognition Skews Toward Performance and Visibility")
 
-# -------------------------
-# 1. Theme Distribution
-# -------------------------
-if view == "Theme Distribution":
-    fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(8, 6))
+        top = theme_counts.head(8)
+        ax.bar(top.index, top.values, color=sns.color_palette("husl", len(top)))
+        ax.set_ylabel("Number of Awards")
+        ax.set_xticklabels(top.index, rotation=45, ha="right")
+        sns.despine()
+        st.pyplot(fig)
 
-    theme_counts_top = theme_counts.head(8)
-    ax.bar(
-        theme_counts_top.index,
-        theme_counts_top.values,
-        color=sns.color_palette("husl", len(theme_counts_top))
-    ) 
-    ax.set_title("Distribution of Award Themes (Top 8)", fontsize=14)
-    ax.set_ylabel("Count")
-    ax.set_xticklabels(theme_counts_top.index, rotation=45, ha="right")
+    if view == "Keyword Analysis":
+        st.subheader("Award Language Emphasizes Excellence Over Experimentation")
 
-    st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(8, 6))
+        keywords_df = pd.DataFrame(keyword_freq[:10], columns=['Keyword', 'Count'])
+        sns.barplot(data=keywords_df, x='Count', y='Keyword', ax=ax)
+        sns.despine()
+        st.pyplot(fig)
 
-# -------------------------
-# 2. Keyword Frequency
-# -------------------------
-if view == "Keyword Analysis":
-    fig, ax = plt.subplots()
-    keywords_df = pd.DataFrame(keyword_freq[:10], columns=['Keyword', 'Count'])
-    sns.barplot(
-        data=keywords_df,
-        x='Count',
-        y='Keyword',
-        palette='viridis',
-        ax=ax
-    )
-    ax.set_title("Top Keywords in Award Categories", fontsize=14)
+    if view == "Win Rate by Theme":
+        st.subheader("Not All Recognition Converts Into Wins")
 
-    st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(8, 6))
+        win_rate_df = win_rate_by_theme.reset_index()
+        win_rate_df.columns = ['Theme', 'Win Rate']
+        sns.barplot(data=win_rate_df, x='Win Rate', y='Theme', ax=ax)
+        ax.axvline(50, linestyle='--', alpha=0.4)
+        sns.despine()
+        st.pyplot(fig)
 
-# -------------------------
-# 3. Win Rate by Theme
-# -------------------------
-if view == "Win Rate by Theme":
-    fig, ax = plt.subplots()
-    win_rate_df = win_rate_by_theme.reset_index()
-    win_rate_df.columns = ['Theme', 'Win Rate']
+    if view == "Theme Trends Over Time":
+        st.subheader("Career Recognition Shifts From Songs to Cultural Impact")
 
-    sns.barplot(
-        data=win_rate_df,
-        x='Win Rate',
-        y='Theme',
-        palette='coolwarm',
-        ax=ax
-    )
-    ax.axvline(50, color='red', linestyle='--', alpha=0.5)
-    ax.set_title("Win Rate by Award Theme", fontsize=14)
-    st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(8, 6))
+        for theme in theme_counts.head(5).index:
+            data = theme_by_year[theme_by_year['Theme'] == theme]
+            ax.plot(data['Year'], data['Count'], marker='o', label=theme)
 
-# -------------------------
-# 4. Theme Evolution Over Time
-# -------------------------
-if view == "Theme Trends Over Time":
-    fig, ax = plt.subplots()
-    top_themes = theme_counts.head(5).index
+        ax.legend(fontsize=8)
+        ax.set_ylabel("Awards Won")
+        sns.despine()
+        st.pyplot(fig)
 
-    for theme in top_themes:
-        tdata = theme_by_year[theme_by_year['Theme'] == theme]
-        ax.plot(tdata['Year'], tdata['Count'], marker='o', label=theme)
+    if view == "Awards vs Release Context":
+        st.subheader("Awards Continue Even When Albums Pause")
 
-    ax.set_title("Award Wins by Theme Over Time", fontsize=14)
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Wins")
-    ax.legend(fontsize=8)
-    st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(8, 6))
+        awards_per_year = df.groupby('Year').size().reset_index(name='Awards')
+        ax.plot(awards_per_year['Year'], awards_per_year['Awards'], marker='o')
 
-# -------------------------
-# 5. Awards vs Release Context
-# -------------------------
-if view == "Awards vs Release Context":
-    fig, ax = plt.subplots()
-    release_years = {
-    2003: "Dangerously in Love",
-    2006: "B'Day",
-    2008: "I Am... Sasha Fierce",
-    2011: "4",
-    2013: "Beyoncé",
-    2016: "Lemonade",
-    2019: "The Lion King: The Gift"
-}
+        release_years = {
+            2003: "Dangerously in Love",
+            2006: "B'Day",
+            2008: "I Am... Sasha Fierce",
+            2011: "4",
+            2013: "Beyoncé",
+            2016: "Lemonade",
+            2019: "The Lion King: The Gift"
+        }
 
-    awards_per_year = df.groupby('Year').size().reset_index(name='Awards')
+        for year, album in release_years.items():
+            ax.axvline(year, linestyle='--', alpha=0.3)
+            ax.text(year, ax.get_ylim()[1]*0.95, album,
+                    rotation=90, fontsize=8, va='top')
 
-    ax.plot(
-    awards_per_year['Year'],
-    awards_per_year['Awards'],
-    marker='o',
-    linewidth=2
-)
+        sns.despine()
+        st.pyplot(fig)
 
-    for year, album in release_years.items():
-        ax.axvline(year, linestyle='--', alpha=0.4)
-        ax.text(year, ax.get_ylim()[1]*0.95, album,
-                 rotation=90, fontsize=8, verticalalignment='top')
+# =========================
+# CONTEXT PANEL
+# =========================
+with col2:
+    st.subheader("Editor’s Note")
 
-    ax.set_title("Awards Received vs Release Years", fontsize=14)
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Total Awards")
-    st.pyplot(fig)
+    context_map = {
+        "Theme Distribution":
+            "Recognition is concentrated around performance, visibility, and excellence rather than niche categorization.",
+
+        "Keyword Analysis":
+            "Award language consistently reinforces dominance, quality, and leadership over experimentation.",
+
+        "Win Rate by Theme":
+            "High nomination volume does not guarantee wins, revealing which forms of recognition carry weight.",
+
+        "Theme Trends Over Time":
+            "Over time, awards shift away from individual songs toward broader cultural and artistic impact.",
+
+        "Awards vs Release Context":
+            "Recognition persists even in non-release years, indicating sustained cultural presence beyond albums."
+    }
+
+    st.write(context_map[view])
