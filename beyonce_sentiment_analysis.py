@@ -6,14 +6,113 @@ import re
 import streamlit as st
 
 # =========================
-# PAGE SETUP
+# PAGE CONFIG
 # =========================
 st.set_page_config(layout="wide")
+
+# =========================
+# REMOVE STREAMLIT CHROME
+# =========================
+st.markdown("""
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+# FIX DROPDOWN MENU (SELECTBOX POPUP)
+st.markdown("""
+<style>
+
+/* Dropdown popup panel */
+ul[role="listbox"] {
+    background-color: #EFE6D6 !important;
+    color: #1F1A17 !important;
+    border: 1px solid #D8CDB8 !important;
+}
+
+/* Individual options */
+ul[role="listbox"] li {
+    background-color: #EFE6D6 !important;
+    color: #1F1A17 !important;
+}
+
+/* Hover state */
+ul[role="listbox"] li:hover {
+    background-color: #E6DBC8 !important;
+    color: #1F1A17 !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
+# EDITORIAL DESIGN SYSTEM
+# =========================
+st.markdown("""
+<style>
+
+.stApp {
+    background-color: #F7F3EA;
+    color: #1F1A17;
+    font-family: Georgia, serif;
+}
+
+h1, h2, h3 {
+    font-family: "Playfair Display", serif;
+    color: #1F1A17;
+}
+
+p, div {
+    color: #1F1A17;
+}
+
+.block-container {
+    padding-top: 2rem;
+}
+
+div[data-baseweb="select"] {
+    background-color: #EFE6D6 !important;
+    border-radius: 6px;
+    border: 1px solid #D8CDB8;
+}
+
+div[data-baseweb="select"] * {
+    color: #1F1A17 !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
+# HERO SECTION
+# =========================
+st.markdown("""
+<h1 style="
+font-size:42px;
+font-weight:600;
+letter-spacing:1px;
+margin-bottom:0;
+">
+Beyoncé: Recognition vs Dominance
+</h1>
+
+<div style="
+font-size:16px;
+color:#6B5E52;
+margin-bottom:30px;
+">
+A data study of awards, wins, and cultural impact
+</div>
+
+<hr style="border:1px solid #C6A34A;">
+""", unsafe_allow_html=True)
 
 col1, col2 = st.columns([3, 1])
 
 # =========================
-# LOAD AND PREP DATA
+# LOAD DATA
 # =========================
 df = pd.read_csv("beyonce-awards.csv")
 
@@ -71,6 +170,7 @@ keyword_freq = Counter(all_keywords).most_common(15)
 df_wins = df[df['Result'].str.lower() == 'won']
 
 theme_counts = df['Theme'].value_counts()
+
 win_rate_by_theme = df.groupby('Theme').apply(
     lambda x: (x['Result'].str.lower() == 'won').sum() / len(x) * 100
 ).sort_values(ascending=False)
@@ -92,39 +192,59 @@ view = st.selectbox(
 )
 
 # =========================
-# MAIN LAYOUT
+# MAIN PANEL
 # =========================
 with col1:
-    if view == "Theme Distribution":
-        st.subheader("Recognition Skews Toward Performance and Visibility")
 
-        fig, ax = plt.subplots(figsize=(8, 6))
-        top = theme_counts.head(8)
-        ax.bar(top.index, top.values, color=sns.color_palette("husl", len(top)))
-        ax.set_ylabel("Number of Awards")
-        ax.set_xticklabels(top.index, rotation=45, ha="right")
-        sns.despine()
+    if view == "Theme Distribution":
+        st.markdown("## RECOGNITION BY CATEGORY")
+
+        fig, ax = plt.subplots(figsize=(9, 6))
+        fig.patch.set_facecolor("#F7F3EA")
+        ax.set_facecolor("#F7F3EA")
+
+        top = theme_counts.head(8).sort_values()
+        ax.barh(top.index, top.values, color="#C6A34A")
+
+        ax.spines[['top', 'right', 'left']].set_visible(False)
+        ax.xaxis.grid(True, alpha=0.15)
+
         st.pyplot(fig)
 
     if view == "Keyword Analysis":
-        st.subheader("Award Language Emphasizes Excellence Over Experimentation")
+        st.markdown("## AWARD LANGUAGE PATTERNS")
 
-        fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(9, 6))
+        fig.patch.set_facecolor("#F7F3EA")
+        ax.set_facecolor("#F7F3EA")
+
         keywords_df = pd.DataFrame(keyword_freq[:10], columns=['Keyword', 'Count'])
-        sns.barplot(data=keywords_df, x='Count', y='Keyword', ax=ax)
-        sns.despine()
+        ax.barh(keywords_df['Keyword'], keywords_df['Count'], color="#C6A34A")
+
+        ax.spines[['top', 'right', 'left']].set_visible(False)
+
         st.pyplot(fig)
 
     if view == "Win Rate by Theme":
-        st.subheader("Not All Recognition Converts Into Wins")
+        st.markdown("## NOT ALL RECOGNITION CONVERTS INTO WINS")
 
-        fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(9, 6))
+        fig.patch.set_facecolor("#F7F3EA")
+        ax.set_facecolor("#F7F3EA")
+
         win_rate_df = win_rate_by_theme.reset_index()
         win_rate_df.columns = ['Theme', 'Win Rate']
-        sns.barplot(data=win_rate_df, x='Win Rate', y='Theme', ax=ax)
+        win_rate_df = win_rate_df.sort_values("Win Rate")
+
+        ax.barh(win_rate_df["Theme"], win_rate_df["Win Rate"], color="#C6A34A")
         ax.axvline(50, linestyle='--', alpha=0.4)
+
+        ax.spines[['top', 'right', 'left']].set_visible(False)
+        ax.xaxis.grid(True, alpha=0.15)
         sns.despine()
         st.pyplot(fig)
+
+        
 
     if view == "Theme Trends Over Time":
         st.subheader("Career Recognition Shifts From Songs to Cultural Impact")
@@ -168,23 +288,29 @@ with col1:
 # CONTEXT PANEL
 # =========================
 with col2:
-    st.subheader("Editor’s Note")
+
+    st.markdown("""
+    <div style="
+        background:#EFE6D6;
+        padding:20px;
+        border-radius:6px;
+        border-left:4px solid #C6A34A;
+    ">
+    <h3 style="margin-top:0;">Editor’s Note</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
     context_map = {
         "Theme Distribution":
-            "Recognition is concentrated around performance, visibility, and excellence rather than niche categorization.",
-
+            "Recognition concentrates around performance, visibility, and excellence.",
         "Keyword Analysis":
-            "Award language consistently reinforces dominance, quality, and leadership over experimentation.",
-
+            "Award language reinforces dominance over experimentation.",
         "Win Rate by Theme":
-            "High nomination volume does not guarantee wins, revealing which forms of recognition carry weight.",
-
+            "Nomination volume does not guarantee wins.",
         "Theme Trends Over Time":
-            "Over time, awards shift away from individual songs toward broader cultural and artistic impact.",
-
+            "Recognition shifts toward cultural impact over time.",
         "Awards vs Release Context":
-            "Recognition persists even in non-release years, indicating sustained cultural presence beyond albums."
+            "Awards persist even during non-release years."
     }
 
     st.write(context_map[view])
